@@ -1,19 +1,37 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Environment variables (민감 정보 포함)
+.env
+.env.local
+.env.*.local
+backend/.env
+frontend/.env
+# .env.example 파일은 Git에 포함 (템플릿용)
+
+# Build outputs
+dist/
+build/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS files
 .DS_Store
+Thumbs.db
 
-# Images
-images/avatars/
-images/captchas/
-images/smileys/
-images/member_photos/
-images/signature_attachments/
-images/pm_attachments/
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 
-# For security do not publish the following files
-system/expressionengine/config/database.php
-system/expressionengine/config/config.php
+# Testing
+coverage/
 
-# Caches
-sized/
-thumbs/
-_thumbs/
-*/expressionengine/cache/*
+# Misc
+*.local
