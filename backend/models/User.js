@@ -3,36 +3,55 @@ const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
 const crypto = require('crypto');
 
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-key-change-in-production!';
 const IV_LENGTH = 16;
+
+// 암호화 키 가져오기 (지연 로딩)
+function getEncryptionConfig() {
+    const key = process.env.ENCRYPTION_KEY;
+    const salt = process.env.ENCRYPTION_SALT;
+
+    // 개발 환경에서는 기본값 허용, 프로덕션에서는 필수
+    if (process.env.NODE_ENV === 'production') {
+        if (!key || !salt) {
+            throw new Error('ENCRYPTION_KEY와 ENCRYPTION_SALT 환경변수가 필요합니다.');
+        }
+    }
+
+    return {
+        key: key || 'dev-only-key-do-not-use-in-prod!!',
+        salt: salt || 'dev-only-salt-16ch'
+    };
+}
 
 // API 키 암호화
 function encrypt(text) {
-  if (!text) return null;
-  const iv = crypto.randomBytes(IV_LENGTH);
-  const key = crypto.scryptSync(ENCRYPTION_KEY, 'salt', 32);
-  const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
-  let encrypted = cipher.update(text, 'utf8', 'hex');
-  encrypted += cipher.final('hex');
-  return iv.toString('hex') + ':' + encrypted;
+    if (!text) return null;
+    const config = getEncryptionConfig();
+    const iv = crypto.randomBytes(IV_LENGTH);
+    const derivedKey = crypto.scryptSync(config.key, config.salt, 32);
+    const cipher = crypto.createCipheriv('aes-256-cbc', derivedKey, iv);
+    let encrypted = cipher.update(text, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    return iv.toString('hex') + ':' + encrypted;
 }
 
 // API 키 복호화
 function decrypt(text) {
-  if (!text) return null;
-  try {
-    const parts = text.split(':');
-    const iv = Buffer.from(parts.shift(), 'hex');
-    const encryptedText = parts.join(':');
-    const key = crypto.scryptSync(ENCRYPTION_KEY, 'salt', 32);
-    const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
-    let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-    return decrypted;
-  } catch (error) {
-    console.error('복호화 오류:', error);
-    return null;
-  }
+    if (!text) return null;
+    try {
+        const config = getEncryptionConfig();
+        const parts = text.split(':');
+        const iv = Buffer.from(parts.shift(), 'hex');
+        const encryptedText = parts.join(':');
+        const derivedKey = crypto.scryptSync(config.key, config.salt, 32);
+        const decipher = crypto.createDecipheriv('aes-256-cbc', derivedKey, iv);
+        let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
+        decrypted += decipher.final('utf8');
+        return decrypted;
+    } catch (error) {
+        console.error('복호화 오류:', error);
+        return null;
+    }
 }
 
 const User = sequelize.define('User', {
