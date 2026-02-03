@@ -1,0 +1,11 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://ai-pick.vercel.app/api/:path*"
+    }
+  ],
+  "env": {
+    "VITE_GOOGLE_CLIENT_ID": "@vite_google_client_id"
+  }
+}

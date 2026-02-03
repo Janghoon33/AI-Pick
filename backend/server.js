@@ -92,24 +92,17 @@ app.use((req, res) => {
 // 에러 핸들러 (마지막에 위치)
 app.use(errorHandler);
 
-// 서버 시작
-const PORT = process.env.PORT || 3001;
+// DB 연결 (Vercel Serverless에서는 요청 시 연결)
+connectDB().catch(err => console.error('DB 연결 오류:', err));
 
-const startServer = async () => {
-    try {
-        // DB 연결
-        await connectDB();
+// 로컬 개발 환경에서만 서버 시작
+if (process.env.NODE_ENV !== 'production') {
+    const PORT = process.env.PORT || 3001;
+    app.listen(PORT, () => {
+        console.log(`AI-PICK 서버가 포트 ${PORT}에서 실행 중입니다.`);
+        console.log(`환경: ${process.env.NODE_ENV || 'development'}`);
+    });
+}
 
-        app.listen(PORT, () => {
-            console.log(`AI-PICK 서버가 포트 ${PORT}에서 실행 중입니다.`);
-            console.log(`환경: ${process.env.NODE_ENV || 'development'}`);
-        });
-    } catch (error) {
-        console.error('서버 시작 실패:', error);
-        process.exit(1);
-    }
-};
-
-startServer();
-
+// Vercel Serverless Function으로 export
 module.exports = app;
