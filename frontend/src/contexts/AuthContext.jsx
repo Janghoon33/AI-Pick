@@ -1,6 +1,7 @@
 // contexts/AuthContext.jsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+const API_URL = import.meta.env.VITE_API_URL || '';
 const AuthContext = createContext(null);
 
 export const useAuth = () => {
@@ -25,7 +26,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       try {
-        const response = await fetch('/api/auth/me', {
+        const response = await fetch(`${API_URL}/api/auth/me`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -52,7 +53,7 @@ export const AuthProvider = ({ children }) => {
   // Google 로그인
   const loginWithGoogle = async (credential) => {
     try {
-      const response = await fetch('/api/auth/google', {
+      const response = await fetch(`${API_URL}/api/auth/google`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -85,7 +86,7 @@ export const AuthProvider = ({ children }) => {
   // API 키 저장
   const saveApiKey = async (service, apiKey) => {
     try {
-      const response = await fetch('/api/auth/api-keys', {
+      const response = await fetch(`${API_URL}/api/auth/api-keys`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -110,7 +111,7 @@ export const AuthProvider = ({ children }) => {
   // API 키 삭제
   const deleteApiKey = async (service) => {
     try {
-      const response = await fetch(`/api/auth/api-keys/${service}`, {
+      const response = await fetch(`${API_URL}/api/auth/api-keys/${service}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

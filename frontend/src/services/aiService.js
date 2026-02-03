@@ -1,5 +1,6 @@
 // services/aiService.js
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const API_URL = import.meta.env.VITE_API_URL || '';
+const API_BASE_URL = `${API_URL}/api`;
 
 class AIServiceAPI {
   // 토큰 가져오기
