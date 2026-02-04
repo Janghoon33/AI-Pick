@@ -1,6 +1,9 @@
 // server.js
 require('dotenv').config();
 
+// pg를 명시적으로 require하여 Vercel 번들에 포함되도록 함
+require('pg');
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
