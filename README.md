@@ -39,3 +39,6 @@ AI-PICK은 여러 AI 서비스의 답변을 한눈에 비교할 수 있도록 �
 - Sequelize ORM
 - JWT 인증
 
+### Deployment
+- Vercel (Frontend & Backend)
+
