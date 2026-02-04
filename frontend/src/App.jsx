@@ -112,14 +112,16 @@ function App() {
               Google 계정으로 로그인하고 AI 서비스의 API 키를 등록하여<br />
               여러 AI의 답변을 한눈에 비교해보세요.
             </p>
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={() => console.error('Login Failed')}
-              shape="pill"
-              size="large"
-              theme="outline"
-              text="signin_with"
-            />
+            <div className="flex justify-center mt-8">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => console.error('Login Failed')}
+                shape="pill"
+                size="large"
+                theme="standard"
+                text="signin_with"
+              />
+            </div>
           </div>
         ) : (
           <>
