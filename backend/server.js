@@ -22,6 +22,9 @@ if (process.env.NODE_ENV === 'production') {
 
 const app = express();
 
+// Vercel 프록시 환경 설정
+app.set('trust proxy', 1);
+
 // 보안 헤더 설정 (Helmet)
 app.use(helmet());
 
@@ -78,6 +81,21 @@ const aiLimiter = rateLimit({
 app.use(express.json({ limit: '10kb' })); // body 크기 제한
 app.use(logger);
 
+// DB 연결 미들웨어 (Serverless에서 요청 전 DB 연결 보장)
+let dbPromise = null;
+app.use(async (req, res, next) => {
+    if (!dbPromise) {
+        dbPromise = connectDB();
+    }
+    try {
+        await dbPromise;
+        next();
+    } catch (err) {
+        console.error('DB 연결 오류:', err);
+        res.status(500).json({ error: '데이터베이스 연결에 실패했습니다.' });
+    }
+});
+
 // Rate Limiter 적용
 app.use('/api/auth', authLimiter);
 app.use('/api/ask', aiLimiter);
@@ -94,9 +112,6 @@ app.use((req, res) => {
 
 // 에러 핸들러 (마지막에 위치)
 app.use(errorHandler);
-
-// DB 연결 (Vercel Serverless에서는 요청 시 연결)
-connectDB().catch(err => console.error('DB 연결 오류:', err));
 
 // 로컬 개발 환경에서만 서버 시작
 if (process.env.NODE_ENV !== 'production') {
