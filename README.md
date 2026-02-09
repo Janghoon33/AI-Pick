@@ -19,9 +19,12 @@ AI-PICK은 여러 AI 서비스의 답변을 한눈에 비교할 수 있도록 �
 ## 지원 AI 서비스
 | 서비스 | 모델 | 무료 여부 |
 |--------|------|----------|
-| Groq | Llama 3.3 70B | 무료 |
+| Google | Gemini 2.5 Flash | 무료 |
+| Groq | Llama 4 Scout | 무료 |
 | Cohere | Command A | 무료 (월 1000 요청) |
-| Google | Gemini 3 Flash | 무료 |
+| DeepSeek | DeepSeek V3 | 무료 |
+| Mistral | Mistral Large | 무료 |
+| OpenRouter | OpenRouter Auto | 무료 |
 | OpenAI | GPT-4o mini | 💰 유료 |
 | Anthropic | Claude 3.5 Sonnet | 💰 유료 |
 
