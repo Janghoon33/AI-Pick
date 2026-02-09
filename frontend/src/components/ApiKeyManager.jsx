@@ -2,13 +2,19 @@ import React, { useState } from 'react';
 import { X, Key, Check, Trash2, Save, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
-// This could be fetched from a config file or an API endpoint in a real-world app
+// API 서비스별 정보 (한글)
 const SERVICE_INFO = {
-  openai: { name: 'OpenAI', placeholder: 'sk-...', url: 'https://platform.openai.com/api-keys', guide: ['Login to OpenAI Platform', 'Find "API keys" in the left menu', 'Click "Create new secret key"', 'Copy and paste the generated key'], note: 'Payment method required after free credits are used' },
-  anthropic: { name: 'Anthropic', placeholder: 'sk-ant-...', url: 'https://console.anthropic.com/settings/keys', guide: ['Login to Anthropic Console', 'Go to Settings → API Keys', 'Click "Create Key"', 'Copy and paste the generated key'], note: 'Initial $5 free credit provided' },
-  google: { name: 'Google AI', placeholder: 'AIza...', url: 'https://aistudio.google.com/app/apikey', guide: ['Login to Google AI Studio', 'Click "Get API key"', 'Select "Create API key"', 'Copy and paste the generated key'], note: 'Free usage tier available (with rate limits)' },
-  groq: { name: 'Groq', placeholder: 'gsk_...', url: 'https://console.groq.com/keys', guide: ['Login to Groq Console', 'Find "API Keys" in the left menu', 'Click "Create API Key"', 'Copy and paste the generated key'], note: 'Free to use (with rate limits)' },
-  cohere: { name: 'Cohere', placeholder: '...', url: 'https://dashboard.cohere.com/api-keys', guide: ['Login to Cohere Dashboard', 'Find "API Keys" in the left menu', 'Click "+ New Trial Key"', 'Copy and paste the generated key'], note: 'Free trial key provides 1000 requests/month' }
+  // === 유료 API ===
+  openai: { name: 'OpenAI', placeholder: 'sk-...', url: 'https://platform.openai.com/api-keys', guide: ['OpenAI 플랫폼에 로그인', '왼쪽 메뉴에서 "API keys" 클릭', '"Create new secret key" 클릭', '생성된 키를 복사하여 붙여넣기'], note: '무료 크레딧 소진 후 결제 수단 필요' },
+  anthropic: { name: 'Anthropic', placeholder: 'sk-ant-...', url: 'https://console.anthropic.com/settings/keys', guide: ['Anthropic 콘솔에 로그인', 'Settings → API Keys로 이동', '"Create Key" 클릭', '생성된 키를 복사하여 붙여넣기'], note: '가입 시 $5 무료 크레딧 제공' },
+
+  // === 무료 티어 API ===
+  google: { name: 'Google AI (Gemini)', placeholder: 'AIza...', url: 'https://aistudio.google.com/app/apikey', guide: ['Google AI Studio에 로그인', '"Get API key" 클릭', '"Create API key" 선택', '생성된 키를 복사하여 붙여넣기'], note: '🆓 하루 100만 토큰 무료' },
+  groq: { name: 'Groq', placeholder: 'gsk_...', url: 'https://console.groq.com/keys', guide: ['Groq 콘솔에 로그인', '왼쪽 메뉴에서 "API Keys" 클릭', '"Create API Key" 클릭', '생성된 키를 복사하여 붙여넣기'], note: '🆓 하루 14,400 요청 무료, 가장 빠른 응답' },
+  cohere: { name: 'Cohere', placeholder: '...', url: 'https://dashboard.cohere.com/api-keys', guide: ['Cohere 대시보드에 로그인', '왼쪽 메뉴에서 "API Keys" 클릭', '"+ New Trial Key" 클릭', '생성된 키를 복사하여 붙여넣기'], note: '🆓 무료 Trial 키 제공' },
+  deepseek: { name: 'DeepSeek', placeholder: 'sk-...', url: 'https://platform.deepseek.com/api_keys', guide: ['DeepSeek 플랫폼에 가입/로그인', 'API Keys 섹션으로 이동', '"Create new API key" 클릭', '생성된 키를 복사하여 붙여넣기'], note: '🆓 가입 시 무료 크레딧, GPT-4급 성능' },
+  mistral: { name: 'Mistral AI', placeholder: '...', url: 'https://console.mistral.ai/api-keys/', guide: ['Mistral 콘솔에 가입/로그인', 'API Keys 섹션으로 이동', '"Create new key" 클릭', '생성된 키를 복사하여 붙여넣기'], note: '🆓 월 10억 토큰 무료 (Experiment 플랜)' },
+  openrouter: { name: 'OpenRouter', placeholder: 'sk-or-...', url: 'https://openrouter.ai/keys', guide: ['OpenRouter에 가입/로그인', 'Keys 섹션으로 이동', '"Create Key" 클릭', '생성된 키를 복사하여 붙여넣기'], note: '🆓 18개 이상 무료 모델, 카드 등록 불필요' }
 };
 
 function ApiKeyManager({ isOpen, onClose }) {
@@ -32,25 +38,25 @@ function ApiKeyManager({ isOpen, onClose }) {
       await saveApiKey(service, apiKeys[service]);
       setApiKeys(prev => ({ ...prev, [service]: '' }));
       setExpandedGuide(null);
-      setMessage({ type: 'success', text: `${SERVICE_INFO[service].name} API key has been saved.` });
+      setMessage({ type: 'success', text: `${SERVICE_INFO[service].name} API 키가 저장되었습니다.` });
     } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to save key.' });
+      setMessage({ type: 'error', text: '키 저장에 실패했습니다.' });
     } finally {
       setSaving(prev => ({ ...prev, [service]: false }));
     }
   };
 
   const handleDelete = async (service) => {
-    if (!confirm(`Are you sure you want to delete the API key for ${SERVICE_INFO[service].name}?`)) return;
+    if (!confirm(`${SERVICE_INFO[service].name} API 키를 삭제하시겠습니까?`)) return;
 
     setSaving(prev => ({ ...prev, [service]: true }));
     setMessage({ type: '', text: '' });
 
     try {
       await deleteApiKey(service);
-      setMessage({ type: 'success', text: `${SERVICE_INFO[service].name} API key has been deleted.` });
+      setMessage({ type: 'success', text: `${SERVICE_INFO[service].name} API 키가 삭제되었습니다.` });
     } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to delete key.' });
+      setMessage({ type: 'error', text: '키 삭제에 실패했습니다.' });
     } finally {
       setSaving(prev => ({ ...prev, [service]: false }));
     }
@@ -62,7 +68,7 @@ function ApiKeyManager({ isOpen, onClose }) {
         <header className="px-6 py-4 flex items-center justify-between flex-shrink-0 border-b border-neutral-200">
           <div className="flex items-center gap-3">
             <Key className="w-6 h-6 text-primary" />
-            <h2 className="text-xl font-bold text-text">API Key Management</h2>
+            <h2 className="text-xl font-bold text-text">API 키 관리</h2>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-md hover:bg-neutral-100 text-neutral-500 hover:text-text transition-colors">
             <X className="w-5 h-5" />
@@ -88,14 +94,14 @@ function ApiKeyManager({ isOpen, onClose }) {
                 {user?.apiKeyStatus?.[service] && (
                   <span className="flex items-center gap-1 text-xs font-medium text-green-600">
                     <Check className="w-4 h-4" />
-                    Registered
+                    등록됨
                   </span>
                 )}
               </div>
 
               <button onClick={() => toggleGuide(service)} className="flex items-center gap-1 text-sm text-neutral-500 hover:text-primary mb-3 transition-colors">
                 {expandedGuide === service ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                How to get API key
+                API 키 발급 방법
               </button>
 
               {expandedGuide === service && (
@@ -105,7 +111,7 @@ function ApiKeyManager({ isOpen, onClose }) {
                   </ol>
                   {info.note && <p className="mt-2 text-xs text-amber-700">💡 {info.note}</p>}
                   <a href={info.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 mt-2 text-primary hover:text-primary-dark font-medium">
-                    Go to page <ExternalLink className="w-3.5 h-3.5" />
+                    발급 페이지로 이동 <ExternalLink className="w-3.5 h-3.5" />
                   </a>
                 </div>
               )}
@@ -115,14 +121,14 @@ function ApiKeyManager({ isOpen, onClose }) {
                   type="password"
                   value={apiKeys[service]}
                   onChange={(e) => setApiKeys(prev => ({ ...prev, [service]: e.target.value }))}
-                  placeholder={user?.apiKeyStatus?.[service] ? 'Enter new key to replace' : info.placeholder}
+                  placeholder={user?.apiKeyStatus?.[service] ? '새 키를 입력하면 교체됩니다' : info.placeholder}
                   className="flex-1 px-3 py-2 bg-white border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                 />
                 <button
                   onClick={() => handleSave(service)}
                   disabled={!apiKeys[service].trim() || saving[service]}
                   className="p-2.5 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  aria-label="Save API Key"
+                  aria-label="API 키 저장"
                 >
                   <Save className="w-4 h-4" />
                 </button>
@@ -131,7 +137,7 @@ function ApiKeyManager({ isOpen, onClose }) {
                     onClick={() => handleDelete(service)}
                     disabled={saving[service]}
                     className="p-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    aria-label="Delete API Key"
+                    aria-label="API 키 삭제"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -142,7 +148,7 @@ function ApiKeyManager({ isOpen, onClose }) {
 
           <div className="mt-4 p-3 bg-neutral-100 rounded-lg">
             <p className="text-xs text-neutral-600">
-              🔒 API keys are encrypted and stored securely in your browser's local storage. They are not sent to our server.
+              🔒 API 키는 암호화되어 서버에 안전하게 저장됩니다. 키는 AI 서비스 호출 시에만 사용됩니다.
             </p>
           </div>
         </main>

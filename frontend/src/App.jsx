@@ -161,7 +161,13 @@ function App() {
             </div>
 
             {activeServices.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className={
+                activeServices.length === 1
+                  ? 'max-w-md mx-auto'
+                  : activeServices.length === 2
+                    ? 'grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto'
+                    : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+              }>
                 {activeServices.map((service) => (
                   <AIResponseCard
                     key={service.id}

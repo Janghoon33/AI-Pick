@@ -9,8 +9,15 @@ const AIResponseCard = ({
   hasApiKey
 }) => {
   const [copied, setCopied] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
   const isQuotaExceeded = response?.quotaExceeded;
   const hasError = response?.error;
+
+  // 마운트 시 애니메이션 트리거
+  React.useEffect(() => {
+    const timer = setTimeout(() => setIsVisible(true), 50);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleCopy = async () => {
     if (!response?.answer) return;
@@ -26,7 +33,7 @@ const AIResponseCard = ({
   const borderColor = isQuotaExceeded ? 'border-neutral-300' : hasError ? 'border-red-400' : 'border-primary';
 
   return (
-    <div className={`bg-white rounded-xl shadow-md border border-neutral-200/80 flex flex-col overflow-hidden border-t-4 ${borderColor}`}>
+    <div className={`bg-white rounded-xl shadow-md border border-neutral-200/80 flex flex-col overflow-hidden border-t-4 ${borderColor} transition-all duration-300 ease-out ${isVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-95'}`}>
       {/* Card Header */}
       <div className="p-4 flex items-start justify-between">
         <div>

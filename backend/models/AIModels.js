@@ -45,6 +45,34 @@ class AIModels {
           messages: [{ role: 'user', content: message }]
         };
 
+      case 'deepseek':
+        return {
+          model: this.model,
+          messages: [{ role: 'user', content: message }],
+          max_tokens: 1000
+        };
+
+      case 'mistral':
+        return {
+          model: this.model,
+          messages: [{ role: 'user', content: message }],
+          max_tokens: 1000
+        };
+
+      case 'openrouter':
+        return {
+          model: this.model,
+          messages: [{ role: 'user', content: message }],
+          max_tokens: 1000
+        };
+
+      case 'together':
+        return {
+          model: this.model,
+          messages: [{ role: 'user', content: message }],
+          max_tokens: 1000
+        };
+
       default:
         throw new Error(`지원하지 않는 서비스: ${this.id}`);
     }
@@ -77,6 +105,23 @@ class AIModels {
       // Google은 URL에 API 키 포함
       case 'google':
         break;
+
+      case 'deepseek':
+        headers['Authorization'] = `Bearer ${apiKey}`;
+        break;
+
+      case 'mistral':
+        headers['Authorization'] = `Bearer ${apiKey}`;
+        break;
+
+      case 'openrouter':
+        headers['Authorization'] = `Bearer ${apiKey}`;
+        headers['HTTP-Referer'] = 'https://ai-pick.app';
+        break;
+
+      case 'together':
+        headers['Authorization'] = `Bearer ${apiKey}`;
+        break;
     }
 
     return headers;
@@ -107,6 +152,18 @@ class AIModels {
 
       case 'cohere':
         return response.message?.content?.[0]?.text || '응답 없음';
+
+      case 'deepseek':
+        return response.choices?.[0]?.message?.content || '응답 없음';
+
+      case 'mistral':
+        return response.choices?.[0]?.message?.content || '응답 없음';
+
+      case 'openrouter':
+        return response.choices?.[0]?.message?.content || '응답 없음';
+
+      case 'together':
+        return response.choices?.[0]?.message?.content || '응답 없음';
 
       default:
         return '응답 없음';
@@ -149,6 +206,34 @@ class AIModels {
           input: response.usage?.tokens?.input_tokens || 0,
           output: response.usage?.tokens?.output_tokens || 0,
           total: (response.usage?.tokens?.input_tokens || 0) + (response.usage?.tokens?.output_tokens || 0)
+        };
+
+      case 'deepseek':
+        return {
+          input: response.usage?.prompt_tokens || 0,
+          output: response.usage?.completion_tokens || 0,
+          total: response.usage?.total_tokens || 0
+        };
+
+      case 'mistral':
+        return {
+          input: response.usage?.prompt_tokens || 0,
+          output: response.usage?.completion_tokens || 0,
+          total: response.usage?.total_tokens || 0
+        };
+
+      case 'openrouter':
+        return {
+          input: response.usage?.prompt_tokens || 0,
+          output: response.usage?.completion_tokens || 0,
+          total: response.usage?.total_tokens || 0
+        };
+
+      case 'together':
+        return {
+          input: response.usage?.prompt_tokens || 0,
+          output: response.usage?.completion_tokens || 0,
+          total: response.usage?.total_tokens || 0
         };
 
       default:

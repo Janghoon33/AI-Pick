@@ -104,6 +104,26 @@ const User = sequelize.define('User', {
     allowNull: true,
     field: 'cohere_key'
   },
+  deepseekKey: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    field: 'deepseek_key'
+  },
+  mistralKey: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    field: 'mistral_key'
+  },
+  openrouterKey: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    field: 'openrouter_key'
+  },
+  togetherKey: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    field: 'together_key'
+  },
   lastLogin: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW,
@@ -116,16 +136,22 @@ const User = sequelize.define('User', {
   updatedAt: 'updated_at'
 });
 
+// 서비스 ID → 필드명 매핑
+const SERVICE_FIELD_MAP = {
+  openai: 'openaiKey',
+  anthropic: 'anthropicKey',
+  google: 'googleKey',
+  groq: 'groqKey',
+  cohere: 'cohereKey',
+  deepseek: 'deepseekKey',
+  mistral: 'mistralKey',
+  openrouter: 'openrouterKey',
+  together: 'togetherKey'
+};
+
 // API 키 저장 (암호화)
 User.prototype.setApiKey = function(service, apiKey) {
-  const fieldMap = {
-    openai: 'openaiKey',
-    anthropic: 'anthropicKey',
-    google: 'googleKey',
-    groq: 'groqKey',
-    cohere: 'cohereKey'
-  };
-  const field = fieldMap[service];
+  const field = SERVICE_FIELD_MAP[service];
   if (field) {
     this[field] = encrypt(apiKey);
   }
@@ -133,14 +159,7 @@ User.prototype.setApiKey = function(service, apiKey) {
 
 // API 키 조회 (복호화)
 User.prototype.getApiKey = function(service) {
-  const fieldMap = {
-    openai: 'openaiKey',
-    anthropic: 'anthropicKey',
-    google: 'googleKey',
-    groq: 'groqKey',
-    cohere: 'cohereKey'
-  };
-  const field = fieldMap[service];
+  const field = SERVICE_FIELD_MAP[service];
   return field ? decrypt(this[field]) : null;
 };
 
@@ -151,7 +170,11 @@ User.prototype.getAllApiKeys = function() {
     anthropic: decrypt(this.anthropicKey),
     google: decrypt(this.googleKey),
     groq: decrypt(this.groqKey),
-    cohere: decrypt(this.cohereKey)
+    cohere: decrypt(this.cohereKey),
+    deepseek: decrypt(this.deepseekKey),
+    mistral: decrypt(this.mistralKey),
+    openrouter: decrypt(this.openrouterKey),
+    together: decrypt(this.togetherKey)
   };
 };
 
@@ -162,20 +185,17 @@ User.prototype.getApiKeyStatus = function() {
     anthropic: !!this.anthropicKey,
     google: !!this.googleKey,
     groq: !!this.groqKey,
-    cohere: !!this.cohereKey
+    cohere: !!this.cohereKey,
+    deepseek: !!this.deepseekKey,
+    mistral: !!this.mistralKey,
+    openrouter: !!this.openrouterKey,
+    together: !!this.togetherKey
   };
 };
 
 // API 키 삭제
 User.prototype.deleteApiKey = function(service) {
-  const fieldMap = {
-    openai: 'openaiKey',
-    anthropic: 'anthropicKey',
-    google: 'googleKey',
-    groq: 'groqKey',
-    cohere: 'cohereKey'
-  };
-  const field = fieldMap[service];
+  const field = SERVICE_FIELD_MAP[service];
   if (field) {
     this[field] = null;
   }
