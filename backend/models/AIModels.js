@@ -66,13 +66,6 @@ class AIModels {
           max_tokens: 1000
         };
 
-      case 'together':
-        return {
-          model: this.model,
-          messages: [{ role: 'user', content: message }],
-          max_tokens: 1000
-        };
-
       default:
         throw new Error(`지원하지 않는 서비스: ${this.id}`);
     }
@@ -118,10 +111,6 @@ class AIModels {
         headers['Authorization'] = `Bearer ${apiKey}`;
         headers['HTTP-Referer'] = 'https://ai-pick.app';
         break;
-
-      case 'together':
-        headers['Authorization'] = `Bearer ${apiKey}`;
-        break;
     }
 
     return headers;
@@ -160,9 +149,6 @@ class AIModels {
         return response.choices?.[0]?.message?.content || '응답 없음';
 
       case 'openrouter':
-        return response.choices?.[0]?.message?.content || '응답 없음';
-
-      case 'together':
         return response.choices?.[0]?.message?.content || '응답 없음';
 
       default:
@@ -223,13 +209,6 @@ class AIModels {
         };
 
       case 'openrouter':
-        return {
-          input: response.usage?.prompt_tokens || 0,
-          output: response.usage?.completion_tokens || 0,
-          total: response.usage?.total_tokens || 0
-        };
-
-      case 'together':
         return {
           input: response.usage?.prompt_tokens || 0,
           output: response.usage?.completion_tokens || 0,

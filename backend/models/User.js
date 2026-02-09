@@ -119,11 +119,6 @@ const User = sequelize.define('User', {
     allowNull: true,
     field: 'openrouter_key'
   },
-  togetherKey: {
-    type: DataTypes.TEXT,
-    allowNull: true,
-    field: 'together_key'
-  },
   lastLogin: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW,
@@ -145,8 +140,7 @@ const SERVICE_FIELD_MAP = {
   cohere: 'cohereKey',
   deepseek: 'deepseekKey',
   mistral: 'mistralKey',
-  openrouter: 'openrouterKey',
-  together: 'togetherKey'
+  openrouter: 'openrouterKey'
 };
 
 // API 키 저장 (암호화)
@@ -173,8 +167,7 @@ User.prototype.getAllApiKeys = function() {
     cohere: decrypt(this.cohereKey),
     deepseek: decrypt(this.deepseekKey),
     mistral: decrypt(this.mistralKey),
-    openrouter: decrypt(this.openrouterKey),
-    together: decrypt(this.togetherKey)
+    openrouter: decrypt(this.openrouterKey)
   };
 };
 
@@ -188,8 +181,7 @@ User.prototype.getApiKeyStatus = function() {
     cohere: !!this.cohereKey,
     deepseek: !!this.deepseekKey,
     mistral: !!this.mistralKey,
-    openrouter: !!this.openrouterKey,
-    together: !!this.togetherKey
+    openrouter: !!this.openrouterKey
   };
 };
 
