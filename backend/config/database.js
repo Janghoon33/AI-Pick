@@ -1,7 +1,8 @@
 // config/database.js
 const { Sequelize } = require('sequelize');
 
-// Vercel Postgres 연결 설정
+// 운영: PostgreSQL (POSTGRES_URL 있을 때)
+// 로컬: MySQL (POSTGRES_URL 없을 때)
 const sequelize = process.env.POSTGRES_URL
   ? new Sequelize(process.env.POSTGRES_URL, {
       dialect: 'postgres',
@@ -25,8 +26,8 @@ const sequelize = process.env.POSTGRES_URL
       process.env.DB_PASSWORD || '',
       {
         host: process.env.DB_HOST || 'localhost',
-        port: process.env.DB_PORT || 5432,
-        dialect: 'postgres',
+        port: process.env.DB_PORT || 3306,
+        dialect: 'mysql',
         logging: process.env.NODE_ENV === 'development' ? console.log : false,
         pool: {
           max: 5,
@@ -46,8 +47,8 @@ const connectDB = async () => {
     await sequelize.authenticate();
     console.log('PostgreSQL 연결 성공');
 
-    // 테이블 동기화 (프로덕션에서도 첫 실행 시 테이블 생성)
-    await sequelize.sync();
+    // 테이블 동기화 (alter: true로 새 컬럼 자동 추가)
+    await sequelize.sync({ alter: true });
     console.log('테이블 동기화 완료');
 
     isConnected = true;
