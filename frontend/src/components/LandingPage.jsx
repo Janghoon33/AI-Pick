@@ -1,5 +1,7 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 import { Sparkles, ArrowRight } from 'lucide-react';
 
 const EXAMPLE_MODELS = [
@@ -134,7 +136,7 @@ function LandingPage({ onLogin }) {
                   </div>
                 ) : (
                   <div className="text-sm leading-relaxed prose prose-dark prose-sm max-w-none">
-                    <ReactMarkdown>{item.answer}</ReactMarkdown>
+                    <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>{item.answer}</ReactMarkdown>
                   </div>
                 )}
               </div>

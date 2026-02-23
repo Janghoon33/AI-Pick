@@ -82,7 +82,7 @@ function App() {
     await Promise.all(activeServices.map(async (service) => {
       try {
         const data = await AIServiceAPI.askQuestion(service.id, currentQuestion);
-        setResponses(prev => ({ ...prev, [service.id]: { answer: data.answer, tokens: data.tokens, error: false } }));
+        setResponses(prev => ({ ...prev, [service.id]: { answer: data.answer, tokens: data.tokens, duration: data.duration, error: false } }));
       } catch (error) {
         const errorMessage = error.message || 'An error occurred during the request.';
         const isQuotaError = /quota|credit|exceeded|billing/i.test(errorMessage);
@@ -161,30 +161,40 @@ function App() {
         ) : (
           <div className="flex flex-col" style={{ height: 'calc(100vh - 64px)' }}>
             {/* Response area — scrollable */}
-            <div ref={responseAreaRef} className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8">
+            <div ref={responseAreaRef} className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 pt-8">
               {activeServices.length > 0 ? (
                 <div>
                   {/* User question bubble */}
                   {submittedQuestion && (
-                    <div className="pt-6 pb-4 flex justify-end max-w-4xl mx-auto px-2">
+                    <div className="pt-6 pb-4 flex justify-end max-w-5xl mx-auto px-2">
                       <div className="bg-white/[0.06] border border-white/[0.08] rounded-2xl rounded-br-md px-4 py-3 max-w-[60%]">
                         <p className="text-text text-base whitespace-pre-wrap">{submittedQuestion}</p>
                       </div>
                     </div>
                   )}
 
-                  {/* AI responses — side-by-side on desktop, stacked on mobile */}
-                  <div className="flex flex-col md:flex-row md:divide-x divide-white/[0.08]">
+                  {/* Section label — matches HTML mockup */}
+                  {submittedQuestion && (
+                    <p className="text-center text-xs font-semibold tracking-[2px] uppercase text-neutral-500 mb-6">비교 결과</p>
+                  )}
+
+                  {/* AI response cards grid — matches HTML mockup */}
+                  <div className={`grid gap-4 mx-auto pb-6 px-2 ${
+                    activeServices.length === 1
+                      ? 'grid-cols-1 max-w-[400px]'
+                      : activeServices.length === 2
+                        ? 'grid-cols-1 md:grid-cols-2 max-w-[740px]'
+                        : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 max-w-[1100px]'
+                  }`}>
                     {activeServices.map((service) => (
-                      <div key={service.id} className="flex-1 min-w-0 px-4 border-b border-white/[0.08] md:border-b-0 last:border-b-0">
-                        <AIResponseCard
-                          service={service}
-                          onRemove={() => handleRemoveService(service.id)}
-                          response={responses[service.id]}
-                          loading={loading[service.id]}
-                          hasApiKey={user?.apiKeyStatus?.[service.id]}
-                        />
-                      </div>
+                      <AIResponseCard
+                        key={service.id}
+                        service={service}
+                        onRemove={() => handleRemoveService(service.id)}
+                        response={responses[service.id]}
+                        loading={loading[service.id]}
+                        hasApiKey={user?.apiKeyStatus?.[service.id]}
+                      />
                     ))}
                   </div>
                 </div>
@@ -200,15 +210,16 @@ function App() {
             </div>
 
             {/* Bottom input bar */}
-            <div className="flex-shrink-0 bg-[#07080f]/80 backdrop-blur-xl px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex-shrink-0 px-4 sm:px-6 lg:px-8 py-4">
               <div className="max-w-3xl mx-auto">
                 <SearchInput
                   value={question}
                   onChange={setQuestion}
                   onSubmit={handleSubmitQuestion}
                   disabled={!question.trim() || activeServices.length === 0}
-                  activeCount={activeServices.length}
+                  activeServices={activeServices}
                   maxCount={MAX_SERVICES}
+                  onRemoveService={handleRemoveService}
                   onToggleSelector={() => setShowServiceSelector(!showServiceSelector)}
                   selectorDisabled={activeServices.length >= MAX_SERVICES}
                   selectorContent={showServiceSelector && (
