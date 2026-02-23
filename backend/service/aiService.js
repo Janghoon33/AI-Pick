@@ -35,14 +35,18 @@ const aiService = {
             throw error;
         }
 
+        const startTime = Date.now();
         const response = await this._callAIService(aiServiceConfig, question, apiKey);
+        const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+
         const answer = aiServiceConfig.extractAnswer(response);
         const tokens = aiServiceConfig.extractTokens(response);
 
         return {
             service: aiServiceConfig.name,
             answer,
-            tokens
+            tokens,
+            duration
         };
     },
 
