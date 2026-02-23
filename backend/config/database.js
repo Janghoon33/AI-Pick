@@ -48,8 +48,8 @@ const connectDB = async () => {
     const dialect = sequelize.getDialect();
     console.log(`${dialect === 'postgres' ? 'PostgreSQL' : 'MySQL'} 연결 성공`);
 
-    // 테이블 동기화 (기존 데이터 유지)
-    await sequelize.sync();
+    // 테이블 동기화 (기존 데이터 유지하며 스키마 변경 사항 반영)
+    await sequelize.sync({ alter: true });
     console.log('테이블 동기화 완료');
 
     isConnected = true;
