@@ -63,54 +63,54 @@ function ApiKeyManager({ isOpen, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-neutral-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
-        <header className="px-6 py-4 flex items-center justify-between flex-shrink-0 border-b border-neutral-200">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-[#0f1019] rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden border border-white/[0.08]">
+        <header className="px-6 py-4 flex items-center justify-between flex-shrink-0 border-b border-white/[0.08]">
           <div className="flex items-center gap-3">
-            <Key className="w-6 h-6 text-primary" />
+            <Key className="w-6 h-6 text-accent1" />
             <h2 className="text-xl font-bold text-text">API 키 관리</h2>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-md hover:bg-neutral-100 text-neutral-500 hover:text-text transition-colors">
+          <button onClick={onClose} className="p-1.5 rounded-md hover:bg-white/[0.06] text-neutral-400 hover:text-text transition-colors">
             <X className="w-5 h-5" />
           </button>
         </header>
 
         <main className="p-6 space-y-4 overflow-y-auto flex-1">
           {message.text && (
-            <div className={`p-3 rounded-lg text-sm font-medium ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+            <div className={`p-3 rounded-lg text-sm font-medium ${message.type === 'success' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
               {message.text}
             </div>
           )}
 
           {Object.entries(SERVICE_INFO).map(([service, info]) => (
-            <div key={service} className="border border-neutral-200 rounded-xl p-4 transition-all hover:border-neutral-300">
+            <div key={service} className="border border-white/[0.08] rounded-xl p-4 transition-all hover:border-white/[0.15]">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-text">{info.name}</span>
-                  <a href={info.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary-dark transition-colors" title="Go to API key page">
+                  <a href={info.url} target="_blank" rel="noopener noreferrer" className="text-accent1 hover:text-accent2 transition-colors" title="Go to API key page">
                     <ExternalLink className="w-4 h-4" />
                   </a>
                 </div>
                 {user?.apiKeyStatus?.[service] && (
-                  <span className="flex items-center gap-1 text-xs font-medium text-green-600">
+                  <span className="flex items-center gap-1 text-xs font-medium text-green-400">
                     <Check className="w-4 h-4" />
                     등록됨
                   </span>
                 )}
               </div>
 
-              <button onClick={() => toggleGuide(service)} className="flex items-center gap-1 text-sm text-neutral-500 hover:text-primary mb-3 transition-colors">
+              <button onClick={() => toggleGuide(service)} className="flex items-center gap-1 text-sm text-neutral-500 hover:text-accent1 mb-3 transition-colors">
                 {expandedGuide === service ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 API 키 발급 방법
               </button>
 
               {expandedGuide === service && (
-                <div className="mb-4 p-3 bg-neutral-100 rounded-lg text-sm space-y-2">
-                  <ol className="list-decimal list-inside space-y-1 text-neutral-600">
+                <div className="mb-4 p-3 bg-white/[0.03] rounded-lg text-sm space-y-2 border border-white/[0.06]">
+                  <ol className="list-decimal list-inside space-y-1 text-neutral-500">
                     {info.guide.map((step, index) => <li key={index}>{step}</li>)}
                   </ol>
-                  {info.note && <p className="mt-2 text-xs text-amber-700">💡 {info.note}</p>}
-                  <a href={info.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 mt-2 text-primary hover:text-primary-dark font-medium">
+                  {info.note && <p className="mt-2 text-xs text-amber-400">💡 {info.note}</p>}
+                  <a href={info.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 mt-2 text-accent1 hover:text-accent2 font-medium">
                     발급 페이지로 이동 <ExternalLink className="w-3.5 h-3.5" />
                   </a>
                 </div>
@@ -122,12 +122,12 @@ function ApiKeyManager({ isOpen, onClose }) {
                   value={apiKeys[service]}
                   onChange={(e) => setApiKeys(prev => ({ ...prev, [service]: e.target.value }))}
                   placeholder={user?.apiKeyStatus?.[service] ? '새 키를 입력하면 교체됩니다' : info.placeholder}
-                  className="flex-1 px-3 py-2 bg-white border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                  className="flex-1 px-3 py-2 bg-white/[0.04] border border-white/[0.08] rounded-lg text-sm text-text placeholder-neutral-400 focus:outline-none focus:border-indigo-500/40 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.1)]"
                 />
                 <button
                   onClick={() => handleSave(service)}
                   disabled={!apiKeys[service].trim() || saving[service]}
-                  className="p-2.5 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="p-2.5 bg-gradient-to-r from-accent1 to-accent2 text-white rounded-lg hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity"
                   aria-label="API 키 저장"
                 >
                   <Save className="w-4 h-4" />
@@ -136,7 +136,7 @@ function ApiKeyManager({ isOpen, onClose }) {
                   <button
                     onClick={() => handleDelete(service)}
                     disabled={saving[service]}
-                    className="p-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="p-2.5 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                     aria-label="API 키 삭제"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -146,8 +146,8 @@ function ApiKeyManager({ isOpen, onClose }) {
             </div>
           ))}
 
-          <div className="mt-4 p-3 bg-neutral-100 rounded-lg">
-            <p className="text-xs text-neutral-600">
+          <div className="mt-4 p-3 bg-white/[0.03] rounded-lg border border-white/[0.06]">
+            <p className="text-xs text-neutral-500">
               🔒 API 키는 암호화되어 서버에 안전하게 저장됩니다. 키는 AI 서비스 호출 시에만 사용됩니다.
             </p>
           </div>

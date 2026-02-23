@@ -7,20 +7,26 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: '#f8fafc', // slate-50
-        text: '#1e293b',     // slate-800
+        background: '#07080f',
+        text: '#f1f5f9',
         primary: {
-          light: '#2dd4bf', // teal-400
-          DEFAULT: '#14b8a6', // teal-500
-          dark: '#0d9488',  // teal-600
+          light: '#818cf8',
+          DEFAULT: '#6366f1',
+          dark: '#4f46e5',
         },
+        accent1: '#6366f1',
+        accent2: '#06b6d4',
+        accent3: '#a78bfa',
+        surface: 'rgba(255,255,255,0.04)',
+        'surface-hover': 'rgba(255,255,255,0.06)',
+        'surface-border': 'rgba(255,255,255,0.08)',
         neutral: {
-          100: '#f1f5f9', // slate-100
-          200: '#e2e8f0', // slate-200
-          300: '#cbd5e1', // slate-300
-          400: '#94a3b8', // slate-400
-          500: '#64748b', // slate-500
-          600: '#475569', // slate-600
+          100: '#1e1f2e',
+          200: '#2a2b3d',
+          300: '#3a3b50',
+          400: '#6b7280',
+          500: '#9ca3af',
+          600: '#d1d5db',
         },
         white: '#ffffff',
       },
@@ -29,5 +35,7 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/typography'),
+  ],
 }

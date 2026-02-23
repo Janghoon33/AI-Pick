@@ -21,7 +21,7 @@ function UserMenu({ onOpenApiKeyManager }) {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 p-1 rounded-full text-left transition-colors hover:bg-neutral-100"
+        className="flex items-center gap-2 p-1 rounded-full text-left transition-colors hover:bg-white/[0.06]"
       >
         {user?.picture ? (
           <img
@@ -31,7 +31,7 @@ function UserMenu({ onOpenApiKeyManager }) {
           />
         ) : (
           <div className="w-8 h-8 bg-neutral-200 rounded-full flex items-center justify-center">
-            <User className="w-5 h-5 text-neutral-500" />
+            <User className="w-5 h-5 text-neutral-400" />
           </div>
         )}
         <span className="text-sm font-medium text-text">
@@ -41,8 +41,8 @@ function UserMenu({ onOpenApiKeyManager }) {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-neutral-200 overflow-hidden z-50">
-          <div className="px-4 py-3 border-b border-neutral-200">
+        <div className="absolute right-0 mt-2 w-56 bg-[#0f1019] rounded-xl shadow-lg border border-white/[0.08] overflow-hidden z-50">
+          <div className="px-4 py-3 border-b border-white/[0.08]">
             <p className="text-sm font-semibold text-text truncate">{user?.name}</p>
             <p className="text-xs text-neutral-500 truncate">{user?.email}</p>
           </div>
@@ -50,14 +50,14 @@ function UserMenu({ onOpenApiKeyManager }) {
           <div className="py-1">
             <button
               onClick={() => { onOpenApiKeyManager(); setIsOpen(false); }}
-              className="w-full flex items-center gap-3 px-4 py-2 text-sm text-text hover:bg-neutral-100 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-2 text-sm text-text hover:bg-white/[0.06] transition-colors"
             >
-              <Key className="w-4 h-4 text-neutral-500" />
+              <Key className="w-4 h-4 text-neutral-400" />
               API 키 관리
             </button>
             <button
               onClick={() => { logout(); setIsOpen(false); }}
-              className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-400 hover:bg-white/[0.06] transition-colors"
             >
               <LogOut className="w-4 h-4" />
               로그아웃
