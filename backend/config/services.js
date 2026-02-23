@@ -20,8 +20,8 @@ const services = {
   google: new AIModels(
     'google',
     'Gemini 2.5 Flash',
-    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent',
-    'gemini-2.5-flash-preview-05-20'
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
+    'gemini-2.5-flash'
   ),
   groq: new AIModels(
     'groq',
