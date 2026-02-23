@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import { Plus, Sparkles, Clock } from 'lucide-react';
 import { useAuth } from './contexts/AuthContext';
@@ -21,6 +21,7 @@ function App() {
   const [showApiKeyManager, setShowApiKeyManager] = useState(false);
   const [submittedQuestion, setSubmittedQuestion] = useState('');
   const responseAreaRef = useRef(null);
+  const googleLoginRef = useRef(null);
 
   useEffect(() => {
     const fetchServices = async () => {
@@ -42,11 +43,10 @@ function App() {
     }
   };
 
-  const handleLoginClick = () => {
-    // Trigger Google OAuth via the hidden GoogleLogin component
-    const googleBtn = document.querySelector('[data-google-login] div[role="button"]');
-    if (googleBtn) googleBtn.click();
-  };
+  const handleLoginClick = useCallback(() => {
+    const btn = googleLoginRef.current?.querySelector('div[role="button"]');
+    if (btn) btn.click();
+  }, []);
 
   const MAX_SERVICES = 3;
   const handleAddService = (service) => {
@@ -74,7 +74,6 @@ function App() {
     activeServices.forEach(service => { newLoading[service.id] = true; });
     setLoading(newLoading);
 
-    // Scroll to top of response area
     if (responseAreaRef.current) {
       responseAreaRef.current.scrollTop = 0;
     }
@@ -141,8 +140,8 @@ function App() {
                   >
                     로그인
                   </button>
-                  {/* Hidden Google Login button */}
-                  <div data-google-login className="hidden">
+                  {/* Hidden Google Login — triggered via ref */}
+                  <div ref={googleLoginRef} className="hidden">
                     <GoogleLogin
                       onSuccess={handleGoogleSuccess}
                       onError={() => console.error('Login Failed')}
@@ -159,7 +158,7 @@ function App() {
         {!isAuthenticated ? (
           <LandingPage onLogin={handleLoginClick} />
         ) : (
-          <div className="flex flex-col" style={{ height: 'calc(100vh - 64px)' }}>
+          <div className="flex flex-col h-[calc(100vh-64px)]">
             {/* Response area — scrollable */}
             <div ref={responseAreaRef} className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 pt-8">
               {activeServices.length > 0 ? (
@@ -173,12 +172,12 @@ function App() {
                     </div>
                   )}
 
-                  {/* Section label — matches HTML mockup */}
+                  {/* Section label */}
                   {submittedQuestion && (
                     <p className="text-center text-xs font-semibold tracking-[2px] uppercase text-neutral-500 mb-6">비교 결과</p>
                   )}
 
-                  {/* AI response cards grid — matches HTML mockup */}
+                  {/* AI response cards grid */}
                   <div className={`grid gap-4 mx-auto pb-6 px-2 ${
                     activeServices.length === 1
                       ? 'grid-cols-1 max-w-[400px]'

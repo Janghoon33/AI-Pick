@@ -47,7 +47,7 @@ function LandingPage({ onLogin }) {
 
         <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
           <span className="bg-gradient-to-r from-white via-white to-neutral-400 bg-clip-text text-transparent">
-            모든 AI의 답변을
+            원하는 AI의 답변을
           </span>
           <br />
           <span className="bg-gradient-to-r from-accent1 via-accent2 to-accent3 bg-clip-text text-transparent">
@@ -56,7 +56,7 @@ function LandingPage({ onLogin }) {
         </h2>
 
         <p className="text-lg text-neutral-500 max-w-2xl mx-auto mb-12">
-          주요 AI 모델들의 답변을 동시에 비교하고
+          원하는 AI 모델들의 답변을 동시에 비교하고
           <br className="hidden sm:block" />
           가장 적합한 답변을 선택하세요.
         </p>
@@ -98,16 +98,8 @@ function LandingPage({ onLogin }) {
           {EXAMPLE_RESPONSES.map((item) => (
             <div
               key={item.model}
-              className="group bg-white/[0.04] border border-white/[0.08] rounded-xl overflow-hidden transition-all duration-300 hover:border-white/[0.15]"
-              style={{
-                '--glow-color': item.color,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.boxShadow = `0 0 30px ${item.color}15, 0 0 60px ${item.color}08`;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.boxShadow = 'none';
-              }}
+              className="group glow-on-hover bg-white/[0.04] border border-white/[0.08] rounded-xl overflow-hidden transition-all duration-300 hover:border-white/[0.15]"
+              style={{ '--glow-color': item.color }}
             >
               {/* Card Header */}
               <div className="p-4 flex items-center gap-3">
