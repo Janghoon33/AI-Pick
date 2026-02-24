@@ -37,6 +37,29 @@ const aiController = {
                 error: error.message || 'AI 서비스 요청 중 오류가 발생했습니다.'
             });
         }
+    },
+
+    // 여러 서비스에 동시 질문 + 히스토리 저장
+    async askBatch(req, res) {
+        try {
+            const { services, question, sessionId } = req.body;
+
+            if (!Array.isArray(services) || services.length === 0 || !question) {
+                return res.status(400).json({
+                    error: 'services 배열과 question을 모두 입력해주세요.'
+                });
+            }
+
+            const data = await aiService.askBatch(req.user.userId, services, question, sessionId || null);
+
+            res.json(data); // { sessionId, results }
+        } catch (error) {
+            console.error(`[배치 AI 호출 오류]:`, error.message);
+            const status = error.status || 500;
+            res.status(status).json({
+                error: error.message || 'AI 서비스 요청 중 오류가 발생했습니다.'
+            });
+        }
     }
 };
 
