@@ -9,19 +9,41 @@ import AIResponseCard from './components/AIResponseCard';
 import UserMenu from './components/UserMenu';
 import ApiKeyManager from './components/ApiKeyManager';
 import LandingPage from './components/LandingPage';
+import HistoryPage from './components/HistoryPage';
+
+// 히스토리 responses 배열 → { [serviceId]: {...} } 객체 변환
+function convertHistoryResponses(responsesArray) {
+  const obj = {};
+  (responsesArray || []).forEach(r => {
+    if (r.error) {
+      const isQuotaError = /quota|credit|exceeded|billing/i.test(r.error);
+      obj[r.serviceId] = { answer: r.error, tokens: { input: 0, output: 0, total: 0 }, error: true, quotaExceeded: isQuotaError };
+    } else {
+      obj[r.serviceId] = { answer: r.answer, tokens: r.tokens, duration: r.duration, error: false };
+    }
+  });
+  return obj;
+}
 
 function App() {
   const { user, isAuthenticated, loading: authLoading, loginWithGoogle } = useAuth();
   const [availableServices, setAvailableServices] = useState([]);
   const [activeServices, setActiveServices] = useState([]);
   const [question, setQuestion] = useState('');
-  const [responses, setResponses] = useState({});
-  const [loading, setLoading] = useState({});
   const [showServiceSelector, setShowServiceSelector] = useState(false);
   const [showApiKeyManager, setShowApiKeyManager] = useState(false);
-  const [submittedQuestion, setSubmittedQuestion] = useState('');
+  const [currentView, setCurrentView] = useState('home'); // 'home' | 'history'
+
+  // 대화 스레드: [{ question, responses: { [serviceId]: {...} }, loading: { [serviceId]: bool } }]
+  const [conversationTurns, setConversationTurns] = useState([]);
+  const [currentSessionId, setCurrentSessionId] = useState(null);
+
   const responseAreaRef = useRef(null);
   const googleLoginRef = useRef(null);
+
+  // 마지막 턴이 로딩 중인지
+  const isLoading = conversationTurns.length > 0 &&
+    Object.values(conversationTurns[conversationTurns.length - 1]?.loading || {}).some(Boolean);
 
   useEffect(() => {
     const fetchServices = async () => {
@@ -48,6 +70,12 @@ function App() {
     if (btn) btn.click();
   }, []);
 
+  const getGridClass = (count) => {
+    if (count === 1) return 'grid grid-cols-1 max-w-[400px]';
+    if (count === 2) return 'grid grid-cols-2 max-w-[760px]';
+    return 'grid grid-cols-3 max-w-[1100px]';
+  };
+
   const MAX_SERVICES = 3;
   const handleAddService = (service) => {
     if (activeServices.length < MAX_SERVICES && !activeServices.find(s => s.id === service.id)) {
@@ -57,39 +85,118 @@ function App() {
   };
 
   const handleRemoveService = (serviceId) => {
-    setActiveServices(activeServices.filter(s => s.id !== serviceId));
-    const newResponses = { ...responses };
-    delete newResponses[serviceId];
-    setResponses(newResponses);
+    setActiveServices(prev => prev.filter(s => s.id !== serviceId));
   };
 
   const handleSubmitQuestion = async () => {
-    if (!question.trim() || activeServices.length === 0 || !isAuthenticated) return;
+    if (!question.trim() || activeServices.length === 0 || !isAuthenticated || isLoading) return;
 
     const currentQuestion = question;
-    setSubmittedQuestion(currentQuestion);
+    setQuestion('');
+    setCurrentView('home');
+
+    // 로딩 턴 추가
+    const loadingState = Object.fromEntries(activeServices.map(s => [s.id, true]));
+    const newTurn = { question: currentQuestion, responses: {}, loading: loadingState };
+    setConversationTurns(prev => [...prev, newTurn]);
+
+    // 새 턴 추가 후 스크롤 아래로
+    setTimeout(() => {
+      if (responseAreaRef.current) {
+        responseAreaRef.current.scrollTop = responseAreaRef.current.scrollHeight;
+      }
+    }, 50);
+
+    try {
+      const serviceIds = activeServices.map(s => s.id);
+      const { sessionId, results } = await AIServiceAPI.askBatch(serviceIds, currentQuestion, currentSessionId);
+
+      if (!currentSessionId) setCurrentSessionId(sessionId);
+
+      const finalResponses = {};
+      results.forEach(r => {
+        if (r.error) {
+          const isQuotaError = /quota|credit|exceeded|billing/i.test(r.error);
+          finalResponses[r.serviceId] = { answer: r.error, tokens: { input: 0, output: 0, total: 0 }, error: true, quotaExceeded: isQuotaError };
+        } else {
+          finalResponses[r.serviceId] = { answer: r.answer, tokens: r.tokens, duration: r.duration, error: false };
+        }
+      });
+
+      setConversationTurns(prev => {
+        const updated = [...prev];
+        updated[updated.length - 1] = { question: currentQuestion, responses: finalResponses, loading: {} };
+        return updated;
+      });
+
+      setTimeout(() => {
+        if (responseAreaRef.current) {
+          responseAreaRef.current.scrollTop = responseAreaRef.current.scrollHeight;
+        }
+      }, 50);
+    } catch (error) {
+      const errorResponses = {};
+      activeServices.forEach(s => {
+        errorResponses[s.id] = { answer: error.message || '요청 중 오류가 발생했습니다.', tokens: { input: 0, output: 0, total: 0 }, error: true };
+      });
+      setConversationTurns(prev => {
+        const updated = [...prev];
+        updated[updated.length - 1] = { question: currentQuestion, responses: errorResponses, loading: {} };
+        return updated;
+      });
+    }
+  };
+
+  const handleReask = async ({ question: q, services: svcs, responses: histResponses, sessionId: sid }) => {
+    setActiveServices(svcs);
+    setCurrentSessionId(sid || null);
+    setCurrentView('home');
     setQuestion('');
 
-    const newLoading = {};
-    activeServices.forEach(service => { newLoading[service.id] = true; });
-    setLoading(newLoading);
-
-    if (responseAreaRef.current) {
-      responseAreaRef.current.scrollTop = 0;
+    let loadedTurns = [];
+    if (sid) {
+      // 세션 전체 대화 불러오기
+      try {
+        const entries = await AIServiceAPI.getSession(sid);
+        loadedTurns = entries.map(entry => ({
+          question: entry.question,
+          responses: convertHistoryResponses(entry.responses),
+          loading: {}
+        }));
+        setConversationTurns(loadedTurns);
+      } catch {
+        console.error('세션 로딩 실패:', error);
+        // 실패 시 단일 턴으로 폴백
+        loadedTurns = [{ question: q, responses: convertHistoryResponses(histResponses), loading: {} }];
+        setConversationTurns(loadedTurns);
+      }
+    } else {
+      // sessionId 없는 구버전 항목 — 단일 턴 표시, 새 세션으로 계속
+      loadedTurns = [{ question: q, responses: convertHistoryResponses(histResponses), loading: {} }];
+      setConversationTurns(loadedTurns);
     }
 
-    await Promise.all(activeServices.map(async (service) => {
-      try {
-        const data = await AIServiceAPI.askQuestion(service.id, currentQuestion);
-        setResponses(prev => ({ ...prev, [service.id]: { answer: data.answer, tokens: data.tokens, duration: data.duration, error: false } }));
-      } catch (error) {
-        const errorMessage = error.message || 'An error occurred during the request.';
-        const isQuotaError = /quota|credit|exceeded|billing/i.test(errorMessage);
-        setResponses(prev => ({ ...prev, [service.id]: { answer: errorMessage, tokens: { input: 0, output: 0, total: 0 }, error: true, quotaExceeded: isQuotaError } }));
-      } finally {
-        setLoading(prev => ({ ...prev, [service.id]: false }));
+    setTimeout(() => {
+      const targetIdx = loadedTurns.findIndex(t => t.question === q);
+      if (targetIdx !== -1) {
+        const el = document.getElementById(`turn-${targetIdx}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          return;
+        }
       }
-    }));
+      if (responseAreaRef.current) {
+        responseAreaRef.current.scrollTop = responseAreaRef.current.scrollHeight;
+      }
+    }, 150);
+  };
+
+  const resetHome = () => {
+    setCurrentView('home');
+    setActiveServices([]);
+    setConversationTurns([]);
+    setCurrentSessionId(null);
+    setQuestion('');
   };
 
   if (authLoading) {
@@ -100,6 +207,8 @@ function App() {
     );
   }
 
+  const hasConversation = conversationTurns.length > 0;
+
   return (
     <div className="min-h-screen relative">
       {/* Header */}
@@ -107,26 +216,33 @@ function App() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <div className="flex items-center gap-2.5">
+            <button
+              className="flex items-center gap-2.5 cursor-pointer"
+              onClick={() => { if (isAuthenticated) resetHome(); }}
+            >
               <div className="w-8 h-8 bg-gradient-to-br from-accent1 to-accent2 rounded-lg flex items-center justify-center">
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
               <h1 className="text-xl font-bold bg-gradient-to-r from-white to-neutral-500 bg-clip-text text-transparent">
                 AI-PICK
               </h1>
-            </div>
+            </button>
 
             {/* Nav + Auth */}
             <div className="flex items-center gap-4">
               {isAuthenticated && (
                 <nav className="hidden sm:flex items-center gap-1 mr-2">
-                  <a
-                    href="/history"
-                    className="flex items-center gap-2 px-3 py-1.5 text-sm text-neutral-500 hover:text-text rounded-lg hover:bg-white/[0.06] transition-colors"
+                  <button
+                    onClick={() => setCurrentView(currentView === 'history' ? 'home' : 'history')}
+                    className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                      currentView === 'history'
+                        ? 'text-text bg-white/[0.08]'
+                        : 'text-neutral-500 hover:text-text hover:bg-white/[0.06]'
+                    }`}
                   >
                     <Clock className="w-4 h-4" />
                     히스토리
-                  </a>
+                  </button>
                 </nav>
               )}
 
@@ -140,7 +256,6 @@ function App() {
                   >
                     로그인
                   </button>
-                  {/* Hidden Google Login — triggered via ref */}
                   <div ref={googleLoginRef} className="hidden">
                     <GoogleLogin
                       onSuccess={handleGoogleSuccess}
@@ -157,45 +272,64 @@ function App() {
       <main className="relative z-10">
         {!isAuthenticated ? (
           <LandingPage onLogin={handleLoginClick} />
+        ) : currentView === 'history' ? (
+          <HistoryPage onReask={handleReask} availableServices={availableServices} />
         ) : (
           <div className="flex flex-col h-[calc(100vh-64px)]">
             {/* Response area — scrollable */}
-            <div ref={responseAreaRef} className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 pt-8">
+            <div ref={responseAreaRef} className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8">
               {activeServices.length > 0 ? (
-                <div>
-                  {/* User question bubble */}
-                  {submittedQuestion && (
-                    <div className="pt-6 pb-4 flex justify-end max-w-5xl mx-auto px-2">
-                      <div className="bg-white/[0.06] border border-white/[0.08] rounded-2xl rounded-br-md px-4 py-3 max-w-[60%]">
-                        <p className="text-text text-base whitespace-pre-wrap">{submittedQuestion}</p>
+                <div className={!hasConversation ? 'h-full flex flex-col justify-center' : ''}>
+
+                  {/* 대화 스레드 */}
+                  {conversationTurns.map((turn, index) => (
+                    <div key={index} id={`turn-${index}`} className="pt-6 pb-2">
+                      {/* 질문 말풍선 */}
+                      <div className="flex justify-end max-w-5xl mx-auto px-2 mb-4">
+                        <div className="bg-white/[0.06] border border-white/[0.08] rounded-2xl rounded-br-md px-4 py-3 max-w-[60%]">
+                          <p className="text-text text-base whitespace-pre-wrap">{turn.question}</p>
+                        </div>
                       </div>
+
+                      {/* 비교 결과 레이블 */}
+                      <p className="text-center text-xs font-semibold tracking-[2px] uppercase text-neutral-500 mb-4">비교 결과</p>
+
+                      {/* 카드 그리드 */}
+                      <div className={`${getGridClass(activeServices.length)} gap-4 mx-auto pb-6 px-2`}>
+                        {activeServices.map(service => (
+                          <AIResponseCard
+                            key={service.id}
+                            service={service}
+                            onRemove={!hasConversation || index === conversationTurns.length - 1 ? () => handleRemoveService(service.id) : undefined}
+                            response={turn.responses[service.id]}
+                            loading={turn.loading?.[service.id] || false}
+                            hasApiKey={user?.apiKeyStatus?.[service.id]}
+                          />
+                        ))}
+                      </div>
+
+                      {/* 턴 구분선 (마지막 제외) */}
+                      {index < conversationTurns.length - 1 && (
+                        <div className="border-t border-white/[0.04] max-w-[1100px] mx-auto mb-2" />
+                      )}
+                    </div>
+                  ))}
+
+                  {/* 질문 전 빈 카드 */}
+                  {!hasConversation && (
+                    <div className={`${getGridClass(activeServices.length)} gap-4 mx-auto pb-6 px-2`}>
+                      {activeServices.map(service => (
+                        <AIResponseCard
+                          key={service.id}
+                          service={service}
+                          onRemove={() => handleRemoveService(service.id)}
+                          response={null}
+                          loading={false}
+                          hasApiKey={user?.apiKeyStatus?.[service.id]}
+                        />
+                      ))}
                     </div>
                   )}
-
-                  {/* Section label */}
-                  {submittedQuestion && (
-                    <p className="text-center text-xs font-semibold tracking-[2px] uppercase text-neutral-500 mb-6">비교 결과</p>
-                  )}
-
-                  {/* AI response cards grid */}
-                  <div className={`grid gap-4 mx-auto pb-6 px-2 ${
-                    activeServices.length === 1
-                      ? 'grid-cols-1 max-w-[400px]'
-                      : activeServices.length === 2
-                        ? 'grid-cols-1 md:grid-cols-2 max-w-[740px]'
-                        : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 max-w-[1100px]'
-                  }`}>
-                    {activeServices.map((service) => (
-                      <AIResponseCard
-                        key={service.id}
-                        service={service}
-                        onRemove={() => handleRemoveService(service.id)}
-                        response={responses[service.id]}
-                        loading={loading[service.id]}
-                        hasApiKey={user?.apiKeyStatus?.[service.id]}
-                      />
-                    ))}
-                  </div>
                 </div>
               ) : (
                 <div className="h-full flex flex-col items-center justify-center text-center">
@@ -215,7 +349,7 @@ function App() {
                   value={question}
                   onChange={setQuestion}
                   onSubmit={handleSubmitQuestion}
-                  disabled={!question.trim() || activeServices.length === 0}
+                  disabled={!question.trim() || activeServices.length === 0 || isLoading}
                   activeServices={activeServices}
                   maxCount={MAX_SERVICES}
                   onRemoveService={handleRemoveService}

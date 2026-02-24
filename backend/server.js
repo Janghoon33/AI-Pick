@@ -12,6 +12,7 @@ const { connectDB } = require('./config/database');
 const validateEnv = require('./config/validateEnv');
 const aiRoutes = require('./routes/aiRoutes');
 const authRoutes = require('./routes/authRoutes');
+const historyRoutes = require('./routes/historyRoutes');
 const errorHandler = require('./middleware/errorHandler');
 const logger = require('./middleware/logger');
 
@@ -99,11 +100,13 @@ app.use(async (req, res, next) => {
 // Rate Limiter 적용
 app.use('/api/auth', authLimiter);
 app.use('/api/ask', aiLimiter);
+app.use('/api/ask/batch', aiLimiter);
 app.use('/api', apiLimiter);
 
 // 라우트 설정
 app.use('/api', aiRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api', historyRoutes);
 
 // 404 핸들러
 app.use((req, res) => {
