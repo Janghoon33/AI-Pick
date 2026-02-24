@@ -70,12 +70,6 @@ function App() {
     if (btn) btn.click();
   }, []);
 
-  const getGridClass = (count) => {
-    if (count === 1) return 'grid grid-cols-1 max-w-[400px]';
-    if (count === 2) return 'grid grid-cols-2 max-w-[760px]';
-    return 'grid grid-cols-3 max-w-[1100px]';
-  };
-
   const MAX_SERVICES = 3;
   const handleAddService = (service) => {
     if (activeServices.length < MAX_SERVICES && !activeServices.find(s => s.id === service.id)) {
@@ -295,16 +289,17 @@ function App() {
                       <p className="text-center text-xs font-semibold tracking-[2px] uppercase text-neutral-500 mb-4">비교 결과</p>
 
                       {/* 카드 그리드 */}
-                      <div className={`${getGridClass(activeServices.length)} gap-4 mx-auto pb-6 px-2`}>
+                      <div className="flex flex-wrap justify-center gap-4 mx-auto pb-6 px-2 max-w-[1100px]">
                         {activeServices.map(service => (
-                          <AIResponseCard
-                            key={service.id}
-                            service={service}
-                            onRemove={!hasConversation || index === conversationTurns.length - 1 ? () => handleRemoveService(service.id) : undefined}
-                            response={turn.responses[service.id]}
-                            loading={turn.loading?.[service.id] || false}
-                            hasApiKey={user?.apiKeyStatus?.[service.id]}
-                          />
+                          <div key={service.id} className="w-full md:w-[calc((100%-32px)/3)] min-w-[280px]">
+                            <AIResponseCard
+                              service={service}
+                              onRemove={!hasConversation || index === conversationTurns.length - 1 ? () => handleRemoveService(service.id) : undefined}
+                              response={turn.responses[service.id]}
+                              loading={turn.loading?.[service.id] || false}
+                              hasApiKey={user?.apiKeyStatus?.[service.id]}
+                            />
+                          </div>
                         ))}
                       </div>
 
@@ -317,16 +312,17 @@ function App() {
 
                   {/* 질문 전 빈 카드 */}
                   {!hasConversation && (
-                    <div className={`${getGridClass(activeServices.length)} gap-4 mx-auto pb-6 px-2`}>
+                    <div className="w-full flex flex-wrap justify-center gap-4 mx-auto pb-6 px-2 max-w-[1100px]">
                       {activeServices.map(service => (
-                        <AIResponseCard
-                          key={service.id}
-                          service={service}
-                          onRemove={() => handleRemoveService(service.id)}
-                          response={null}
-                          loading={false}
-                          hasApiKey={user?.apiKeyStatus?.[service.id]}
-                        />
+                        <div key={service.id} className="w-full md:w-[calc((100%-32px)/3)] min-w-[280px]">
+                          <AIResponseCard
+                            service={service}
+                            onRemove={() => handleRemoveService(service.id)}
+                            response={null}
+                            loading={false}
+                            hasApiKey={user?.apiKeyStatus?.[service.id]}
+                          />
+                        </div>
                       ))}
                     </div>
                   )}
